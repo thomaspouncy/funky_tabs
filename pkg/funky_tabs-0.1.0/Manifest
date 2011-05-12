@@ -1,0 +1,6 @@
+Manifest
+README.rdoc
+Rakefile
+lib/funky_tabs.rb
+lib/funky_tabs/tab.rb
+lib/funky_tabs/tab_action.rb
