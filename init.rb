@@ -1,0 +1,1 @@
+require 'funky_tabs'

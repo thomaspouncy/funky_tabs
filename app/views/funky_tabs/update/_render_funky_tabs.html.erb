@@ -1,0 +1,68 @@
+<!-- BEGIN Funky Tabs -->
+<div id="funky_tabs">
+        <ul class="css-tabs">
+                <% FunkyTabs.tabs.each_index do |tab_index| %>
+                        <li id="funky_tabs_list-<%= tab_index %>" class="funky_tabs_list"><a href="#funky_tab-<%= tab_index %>"><%= FunkyTabs.tabs[tab_index].title %></a></li>
+                <% end %>
+        </ul>
+        <% FunkyTabs.tabs.each_index do |tab_index| %>
+                <div id="funky_tab-<%= tab_index %>" class="funky_tab"></div>
+        <% end %>
+</div>
+<div style="clear:both;"></div>
+<script type="text/javascript">
+function selectFunkyTab(tab_index){
+        jQuery('div#funky_tabs li.funky_tabs_list').removeClass('selected_tab');
+        jQuery('ul.css-tabs li#funky_tabs_list-'+tab_index).addClass('selected_tab');
+        jQuery('div#funky_tabs div.funky_tab').removeClass('selected_tab_div');
+        jQuery('div#funky_tabs div#funky_tab-'+tab_index).addClass('selected_tab_div');
+        if(load_on_select){
+                funkyTabsAjaxCall(tab_index);
+        } else  {
+                load_on_select = true;
+        }
+        <%= FunkyTabs.tab_select_callback.gsub(/:tab_number/,'tab_index') unless FunkyTabs.tab_select_callback.nil? %>
+}
+function funkyTabsAjaxCall(location_hash){
+        call_hash_change = false;
+        jQuery('div#funky_tabs div.funky_tab').html("<%= raw(FunkyTabs.loading_html) %>");
+        window.location.hash = location_hash;
+        jQuery("div#funky_tabs div.selected_tab_div").load("/funky_tabs/update/funky_tab_action?location_hash="+location_hash);
+}
+function hashChangeEvent(){
+        if(call_hash_change){
+                funkyTabsAjaxCall(location.hash.replace("#",""));
+        } else {
+                call_hash_change = true;
+        }
+}
+if(typeof(jQuery(window).hashchange) == "undefined"){
+        // dont have special plugin, so use onhashchange event. NOTE: this will not work in ie 6 or 7
+        window.onhashchange = hashChangeEvent;
+} else {
+        // if we can find the hashchange jquery plugin (http://benalman.com/projects/jquery-hashchange-plugin/), then use it
+        jQuery(window).hashchange(hashChangeEvent);
+}
+var load_on_select = true;
+var call_hash_change = true;
+jQuery(function() {
+        var initial_tab = <%= FunkyTabs.default_tab_index %>;
+        if(window.location.hash != ""){
+                initial_tab = parseInt(window.location.hash.replace("#","").split("-")[0]);
+        }
+        var tab = jQuery("#funky_tabs").tabs({
+                show: function(event,ui){
+                },
+                select: function(event,ui){
+                        selectFunkyTab(ui.index);
+                },
+                effect: 'ajax'
+        });
+        if(initial_tab == <%= FunkyTabs.default_tab_index %>){
+                selectFunkyTab(initial_tab);
+        } else {
+                jQuery("div#funky_tabs").tabs("select",initial_tab);
+        }
+});
+</script>
+<!-- END Funky Tabs -->
