@@ -20,7 +20,22 @@ module FunkyTabs
     @@tabs ||= []
   end
 
-  # make sure to include / at end of tab controller
+  mattr_accessor :location_hashes_for_content_paths
+  def self.location_hashes_for_content_paths
+    return @@location_hashes_for_content_paths unless @@location_hashes_for_content_paths.blank?
+
+    path_hash = {}
+    tabs.each do |tab|
+      tab.tab_actions.each do |tab_action|
+        location_hash = location_hash_for_tab_action(tab,tab_action)
+        path = content_path_for_tab_and_tab_action(tab,tab_action)
+        path_hash[path] = location_hash
+      end
+    end
+
+    @@location_hashes_for_content_paths = path_hash
+  end
+
   mattr_accessor :default_tab_index
   def self.default_tab_index
     @@default_tab_index ||= 0
@@ -88,8 +103,9 @@ module FunkyTabs
     return nil if tab_index.nil?
 
     tab_action_index = tabs[tab_index].find_tab_action(tab_action)
+    default_index = tabs[tab_index].find_tab_action(tabs[tab_index].default_tab_action)
 
-    return tab_index.to_s if tab_action_index.nil?
+    return tab_index.to_s if tab_action_index.nil? || tab_action_index == default_index
     return "#{tab_index}-#{tab_action_index}" if tab_action_id.nil?
     return "#{tab_index}-#{tab_action_index}-#{tab_action_id}"
   end
@@ -104,12 +120,16 @@ module FunkyTabs
   end
 
   def self.content_path_for_tab_and_tab_action(tab,tab_action=nil,tab_action_id=nil)
-    tab_index = find_tab(tab)
-    return missing_tab_action_path if tab_index.nil?
-    tab = tabs[tab_index]
-    tab_action_index = tab.find_tab_action(tab_action||tab.default_tab_action)
-    return missing_tab_action_path if tab_action_index.nil?
-    tab_action = tab.tab_actions[tab_action_index]
+    unless tab.is_a?(FunkyTabs::Tab)
+      tab_index = find_tab(tab)
+      return missing_tab_action_path if tab_index.nil?
+      tab = tabs[tab_index]
+    end
+    unless tab_action.is_a?(FunkyTabs::TabAction)
+      tab_action_index = tab.find_tab_action(tab_action||tab.default_tab_action)
+      return missing_tab_action_path if tab_action_index.nil?
+      tab_action = tab.tab_actions[tab_action_index]
+    end
     unless tab_action.content_path.blank?
       return tab_action.content_path if tab_action_id.nil?
       return tab_action.content_path+"&id=#{tab_action_id}" if tab_action.content_path.include?("?")
@@ -149,6 +169,32 @@ module FunkyTabs
     tab = tabs[indices.first.to_i]
     return default_tab_index if tab.nil?
     return indices.first
+  end
+
+  def self.correct_path_for_location_hash?(path,location_hash)
+    return false if path.blank? || location_hash.blank?
+    path = path.split("?").first
+
+    tab,tab_action,tab_action_id = tab_and_tab_action_from_location_hash(location_hash)
+    return path == content_path_for_tab_and_tab_action(tab,tab_action)
+  end
+
+  def self.location_hash_for_content_path(path)
+    path = path.split("?").first
+    return location_hashes_for_content_paths[path] rescue nil
+  end
+
+  def self.javascript_key_array
+    js_array = "var path_from_hash_arr = {"
+    location_hashes_for_content_paths.each do |path,location_hash|
+      if path.include?("?")
+        path = path + "&funky_tabs=true"
+      else
+        path = path + "?funky_tabs=true"
+      end
+      js_array = js_array + "'#{location_hash}':'#{path}',"
+    end
+    js_array = js_array.chomp(",")+"};"
   end
 
   # TODO: Figure out way to reset all mattr_accessors
