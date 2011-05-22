@@ -1,10 +1,15 @@
 <script type="text/javascript">
-window.location.hash = '<%= @location_hash %>';
-jQuery("div#funky_tabs div#funky_tab-<%= @tab_index %>").html("<%= escape_javascript(@render_content) %>");
+if(window.location.hash != '#<%= @location_hash %>'){
+        load_on_hashchange = false;
+        window.location.hash = "<%= @location_hash %>";
+}
 if(!jQuery("div#funky_tabs div#funky_tab-<%= @tab_index %>").hasClass('selected_tab_div')){
         load_on_select = false;
-        jQuery("#funky_tabs").tabs("select", <%= @tab_index %>);
+        jQuery("div#funky_tabs").tabs("select",<%= @tab_index %>);
 }
+
+jQuery("div#funky_tabs div#funky_tab-<%= @tab_index %>").html("<%= escape_javascript(@render_content) %>");
+
 <%= FunkyTabs.tab_load_callback.gsub(/:tab_number/,@tab_index) unless FunkyTabs.tab_load_callback.nil? %>
 </script>
 

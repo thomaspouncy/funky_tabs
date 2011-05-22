@@ -13,27 +13,36 @@
 <script type="text/javascript">
 <%= raw(@path_from_hash_arr) %>
 
+var load_on_select = true;
+var load_on_hashchange = true;
+
 function selectFunkyTab(tab_index){
         jQuery('div#funky_tabs li.funky_tabs_list').removeClass('selected_tab');
         jQuery('ul.css-tabs li#funky_tabs_list-'+tab_index).addClass('selected_tab');
         jQuery('div#funky_tabs div.funky_tab').removeClass('selected_tab_div');
         jQuery('div#funky_tabs div#funky_tab-'+tab_index).addClass('selected_tab_div');
+
         if(load_on_select){
-                funkyTabsAjaxCall(tab_index);
-        } else  {
+                if(window.location.hash != "#"+tab_index){
+                        window.location.hash = tab_index;
+                } else {
+                        funkyTabsAjaxCall(window.location.hash);
+                }
+        } else {
                 load_on_select = true;
         }
+
         <%= FunkyTabs.tab_select_callback.gsub(/:tab_number/,'tab_index') unless FunkyTabs.tab_select_callback.nil? %>
 }
 function funkyTabsAjaxCall(location_hash){
-        jQuery('div#funky_tabs div.funky_tab').html("<%= raw(FunkyTabs.loading_html) %>");
-
-        if((typeof(location_hash)=="string") && (location_hash.indexOf("#") != -1)){
+        location_hash = ''+location_hash;
+        if(location_hash.indexOf("#") != -1){
                 location_hash = location_hash.replace("#","");
         }
 
+        jQuery('div#funky_tabs div.funky_tab').html("<%= raw(FunkyTabs.loading_html) %>");
+
         var tab_action_id = "";
-        location_hash = ''+location_hash;
 
         var hash_components = location_hash.split("-");
         var hash_lookup = hash_components[0];
@@ -44,17 +53,22 @@ function funkyTabsAjaxCall(location_hash){
                 tab_action_id = hash_components[2];
         }
 
-
-        window.location.hash = location_hash;
+        //window.location.hash = location_hash;
 
         var path = path_from_hash_arr[hash_lookup];
         if(tab_action_id != ""){
                 path = path.replace("?","?id="+tab_action_id+"&");
         }
+
         jQuery("div#funky_tabs div.selected_tab_div").load(path+'&location_hash='+location_hash);
+
 }
 function hashChangeEvent(){
-        funkyTabsAjaxCall(location.hash);
+        if(load_on_hashchange){
+                funkyTabsAjaxCall(location.hash);
+        } else {
+                load_on_hashchange = true;
+        }
 }
 if(typeof(jQuery(window).hashchange) == "undefined"){
         // dont have special plugin, so use onhashchange event. NOTE: this will not work in ie 6 or 7
@@ -63,7 +77,7 @@ if(typeof(jQuery(window).hashchange) == "undefined"){
         // if we can find the hashchange jquery plugin (http://benalman.com/projects/jquery-hashchange-plugin/), then use it
         jQuery(window).hashchange(hashChangeEvent);
 }
-var load_on_select = true;
+
 jQuery(function() {
         var initial_tab = <%= FunkyTabs.default_tab_index %>;
         if(window.location.hash != ""){
