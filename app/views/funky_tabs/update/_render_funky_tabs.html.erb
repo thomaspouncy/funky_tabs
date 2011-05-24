@@ -60,7 +60,12 @@ function funkyTabsAjaxCall(location_hash){
                 path = path.replace("?","?id="+tab_action_id+"&");
         }
 
-        jQuery("div#funky_tabs div.selected_tab_div").load(path+'&location_hash='+location_hash);
+        jQuery("div#funky_tabs div.selected_tab_div").load(path+'&location_hash='+location_hash,function(response, status, xhr) {
+                if (status == "error") {
+                        var msg = "<%= FunkyTabs.ajax_fail_message %>";
+                        $("div#funky_tabs div.selected_tab_div").html(msg);
+                }
+        });
 
 }
 function hashChangeEvent(){
@@ -88,15 +93,21 @@ jQuery(function() {
                 select: function(event,ui){
                         selectFunkyTab(ui.index);
                 },
-                effect: 'ajax'
+                effect: 'ajax',
+                selected: <%= FunkyTabs.default_tab_index %>
         });
-        if(initial_tab == ""){
+        if(initial_hash == ""){
                 selectFunkyTab(<%= FunkyTabs.default_tab_index %>);
         } else {
-                load_on_select = false;
-                var initial_tab = parseInt(initial_hash.split("-")[0]);
-                jQuery("div#funky_tabs").tabs('select',initial_tab);
-                funkyTabsAjaxCall(initial_hash);
+                initial_tab = parseInt(initial_hash.split("-")[0]);
+                if(initial_tab == <%= FunkyTabs.default_tab_index %>){
+                        selectFunkyTab(<%= FunkyTabs.default_tab_index %>);
+                } else {
+                        load_on_select = false;
+                        var initial_tab = parseInt(initial_hash.split("-")[0]);
+                        jQuery("div#funky_tabs").tabs('select',initial_tab);
+                        funkyTabsAjaxCall(initial_hash);
+                }
         }
 });
 </script>

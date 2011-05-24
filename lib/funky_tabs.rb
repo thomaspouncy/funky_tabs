@@ -54,6 +54,10 @@ module FunkyTabs
   def self.loading_html
     @@loading_html ||= "Loading..."
   end
+  mattr_accessor :ajax_fail_message
+  def self.ajax_fail_message
+    @@ajax_fail_message ||= "It appears something has gone wrong. We apologize for the inconvenience."
+  end
 
   def self.setup
     yield self

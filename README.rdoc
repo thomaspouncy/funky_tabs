@@ -1,12 +1,13 @@
 == Funky Tabs
 
-Funky Tabs is a ruby gem designed to work with Rails 3 and jQuery UI. It allows you to define a tabbed navigation system as a ruby object, and renders out all the necessary javascript to produce these tabs. At the moment it provides the following functionality:
+Funky Tabs is a ruby gem designed to work with Rails 3 and jQuery UI. It allows you to define a tabbed, ajax-ified navigation system as a ruby object, and renders out all the necessary javascript to produce these tabs. At the moment it provides the following functionality:
 * Ajax tabs mean that each tab is pulled via an Ajax request when it is selected to avoid reloading entire pages.
 * A simple tab and tab action naming scheme, so that all you have to do is provide the necessary views.
 * A unique identifier for each page and action, so that the user can easily bookmark whatever page they are on and return to it later.
 * Ajaxified history through either the HashChange jQuery plugin(http://benalman.com/projects/jquery-hashchange-plugin/) if it is available in your project, or through the window.onhashchange event. This means that although everything is done through Ajax, the forward and back mechanisms should still work correctly.
 * Helper methods to produce the necessary javascript to link to whichever tabs and actions you would like.
-* Automatic wrapping of tab and tab action views in Ajax response code.t
+* Automatic wrapping of tab and tab action views in Ajax response code.
+* Ajax failure handling.
 
 == Installation
 
@@ -21,43 +22,46 @@ Then, create a "funky_tabs.rb" file in "config/initializers". This file is where
   FunkyTabs.setup do |ft|
     # Optional parameters
     ft.loading_html = "<p style='text-align: center;'><img src='/images/loading.gif' /></p>"
-    ft.tab_load_callback = "updateHeight();"
-    ft.tab_select_callback = "expandTutorialStep(:tab_number);"
+    ft.ajax_fail_message = "Something went wrong"
+    ft.tab_load_callback = "afterLoad(:tab_number);"
+    ft.tab_select_callback = "afterSelect(:tab_number);"
 
     # REQUIRED
-    ft.default_tabs_controller = 'admin/pro'
+    ft.default_tabs_controller = 'some/controller'
 
     # Define your tabs and tab actions here:
     ft.add_tab("Welcome")
-    ft.add_tab(:name=>"profile",:title=>"Your Profile",:default_tab_action=>{:name=>"profile",:content_path=>"/admin/admin_users/profile"})
-    ft.add_tab(:name=>"products",:title=>"Your Products/Sites",:default_tab_action=>"list",:tab_actions=>["list","add","edit"])
-    ft.add_tab(:name=>"giveaways",:title=>"Your Giveaways",:default_tab_action=>"list",:tab_actions=>["list","add","edit"])
-    ft.add_tab(:name=>"widgets",:title=>"Your Widgets")
-    ft.add_tab(:name=>"dashboard",:title=>"Your Dashboard")
+    ft.add_tab(:name=>"lions",:title=>"Simba",:default_tab_action=>{:name=>"show",:content_path=>"/path/to/the_lion_king"})
+    ft.add_tab(:name=>"tigers",:title=>"Tony",:default_tab_action=>"free",:tab_actions=>["free","round_up"])
+    ft.add_tab(:name=>"bears",:title=>"Baloo",:default_tab_action=>"round_up",:tab_actions=>["free","round_up"])
+    ft.add_tab(:name=>"exclamations",:title=>"Oh My")
   end
 
 == Configuration Options
 
 Here's a brief description of the various configuration options:
 * loading_html - This is the placeholder html that Funky Tabs will put in a tab while its loading. If you don't assign this value, Funky Tabs will just use the text "Loading..."
+* ajax_fail_message - This is the placeholder message that Funky Tabs will display in a tab if the ajax call for a tab action fails. If you don't assign this value, Funky Tabs will just use the text "It appears something has gone wrong. We apologize for the inconvenience."
 * tab_load_callback - Here you can put any javascript you want Funky Tabs to call after a tab loads. Any instance of ":tab_number" will be replaced with the current tab number.
 * tab_select_callback - Here you can put any javascript you want Funky Tabs to call after a tab is selected, but before the Ajax call is returned. Similarly to the load callback, instances of ":tab_number" will be replaces with the current tab number.
+
 * default_tabs_controller(REQUIRED) - Funky Tabs works on the assumption that all of the views for your tabs are stored in the same controller, although you can override this behavior for individual tab actions. This setting tells Funky Tabs where to look for tab views.
 
-Finally, we have the add_tab method. The FunkyTabs object represents an entire navigation system, and contains one or more tabs. Each tab has one or more tab actions associated with it, so, for example, a welcome tab may only have an "index" action, while a management tab may have "list","add", and "edit" actions.
+Finally, we have the add_tab method. The FunkyTabs object represents an entire navigation system, and contains one or more tabs. Each tab has one or more tab actions associated with it, so, for example, a welcome tab may only have an "index" action, while a tigers tab may have "free" and "round_up" actions.
 
-NOTE: This method was originally intended only to be called during initialization. If you need to call it later, to dynamically add a tab, you will need to call render_funky_tabs again, so that Rails will add the new tabs to the necessary javascript. I haven't tested adding tabs after initialization, so I can't guarantee it will work.
+If you only pass a string to add_tab, it will create a tab with just a default tab action of "index".(For example, the above code results in a "welcome" tab with a single tab action "index" that looks for "/some/controller/welcome_index").
 
-If you only pass a string to add_tab, it will create a tab with just a default tab action of "index". Other parameters you may pass to add_tab are:
-* name - this is the name of the view Rails will look to render. The name is the only required parameter for defining a tab. The name is combined with the name of the action to find the view, as follows:
-  If the tab action is "index" then FunkyTabs will look for the view "/default_tabs_controller/name_index", so in the above example, the index action for the Welcome tab comes from "/admin/pro/welcome_index"
-  For any other tab action, Funky Tabs will look for the view "/default_tabs_controller/action_name" Therefore, in the above example, the list action for the products tab coems from "/admin/pro/list_products"
+Other parameters you may pass to add_tab are:
+* name - this is the name of the view Rails will look to render. The name is the only required parameter for defining a tab. The name is combined with the name of each tab action to find the view for that tab action, as follows:
+- If the tab action is "index" then FunkyTabs will look for the view "/default_tabs_controller/name_index", so in the above example, the "index" action for the "welcome" tab comes from "/some/controller/welcome_index"
+- For any other tab action, Funky Tabs will look for the view "/default_tabs_controller/action_name" Therefore, in the above example, the "free" action for the "tigers" tab comes from "/some/controller/free_tigers"
 * title - Title is the phrase that the javascript will display for the tab in the navigation system. This defaults to be the same as the name.
 * default_tab_action - This parameter takes either a hash or string defining the default tab action for Funky Tabs to take when the user first selects a tab. This value defaults to an "index" action.
 * tab_actions - This is where you tell Funky Tabs all the possible actions that can happen within a tab. Each tab action is defined by either a string or a hash of parameters, so tab_actions can either take a string or hash if there is only one tab action available, or an array of strings or hashes if there are many tab actions available. Each tab action can take the following parameters:
-  name - Funky Tabs uses the tab action name to look for the view to render when this action is called. This is required for each tab action.
-  content_path - Funky Tabs assumes by default that the view for every tab action is related to the name of the tab and the tab action, but if you want to override this functionality, or link to a method in another controller, you can do this on a tab action by tab action basis. Simply pass a fullpath to the desired controller/action and Funky Tabs will look there instead. NOTE: if you define the content_path parameter, you must define it with a fullpath. Funky Tabs doesn't know if you're just defining an action or a controller and an action, so even if the file for this tab action is in the same controller as all the other tab actions, you still need to explicitly include that controller
-    For example: Your default_tabs_controller is "tabs" and you've added a new "save" action for your "products" tab, but you want to render the file "tabs/awesome_file.html" instead of "tabs/save_products.html", so you call add_tab(:name=>'products',:tab_actions=>[{:name=>'save',:content_path=>'/tabs/awesome_file.html'}]) Even though "tabs" is already defined as your default_tabs_controller, Funky Tabs will not know what to do if you just define the content path as "awesome_file.html".
+- name - Funky Tabs uses the tab action name to look for the view to render when this action is called. This is required for each tab action.
+- content_path - Funky Tabs assumes by default that the view for every tab action is related to the name of the tab and the tab action, but if you want to override this functionality, or link to a method in another controller, you can do this on a tab action by tab action basis. Simply pass a fullpath to the desired controller/action and Funky Tabs will look there instead. (NOTE: if you define the content_path parameter, you must define it with a fullpath. Funky Tabs doesn't know if you're just defining an action or a controller and an action, so even if the file for this tab action is in the same controller as all the other tab actions, you still need to explicitly include that controller. For example, your default_tabs_controller is "tabs" and you've added a new "save" action for your "products" tab, but you want to render the file "tabs/awesome_file.html" instead of "tabs/save_products.html", so you call add_tab(:name=>'products',:tab_actions=>[{:name=>'save',:content_path=>'/tabs/awesome_file.html'}]) Even though "tabs" is already defined as your default_tabs_controller, Funky Tabs will not know what to do if you just define the content path as "awesome_file.html".)
+
+NOTE: The add_tab method was originally intended only to be called during initialization. If you need to call it after initialization to dynamically add a tab, you will need to call render_funky_tabs again so that Rails will add the new tabs to the necessary javascript. I haven't tested adding tabs after initialization, so I can't guarantee it will work.
 
 == Funky Tabs Naming Scheme
 
@@ -72,10 +76,9 @@ Funky Tabs adds a few helper methods to all your controllers and views automatic
   <%= render_funky_tabs %>
 
 * js_to_funky_tab(tab,tab_action,tab_action_id) - This method writes out the javascript necessary to change the current tab and tab action to a new tab or tab action. The id parameter allows you to pass an object id to a tab action method, and you may pass javascript as the id.
-
-  For example, the following code uses javascript to get the product id from the "current_product" variable. Note the use of quotation marks.
+- For example, the following code uses javascript to get the product id from the "current_product" variable. Note the use of quotation marks.
   <div onclick="<%= js_to_funky_tab(:products,:edit,"'+current_product+'") %>">Edit this Product</div>
-  The tab_action and tab_action_id parameters are optional. If you call this method without a tab_action, it will call the default tab action.
+- The tab_action and tab_action_id parameters are optional. If you call this method without a tab_action, it will call the default tab action.
 
 * location_hash_for_funky_tab(tab,tab_action,tab_action_id) - if, for whatever reason, you just need to know what the unique location hash would be for a particular tab, tab action and object id, this method will tell you.
 
@@ -83,4 +86,11 @@ Funky Tabs adds a few helper methods to all your controllers and views automatic
 
 Since every request with a Funky Tabs navigation system is an Ajax request, you might expect that you would have to format your tab views somehow to get everything to work. However, Funky Tabs does this for you by automatically wrapping any GET request sent with parameters "funky_tabs=true&location_hash=whatever" in the necessary code to update and or switch to the appropriate tab.
 
-For example, if you have a Welcome tab with an "index" action, all you have to do is put whatever HTML you want in the welcome_index.html view and Funky Tabs will handle the javascript necessary to load the HTML into the appropriate tab when the user selects the "Welcome" tab.
+For example, if you have a Welcome tab with an "index" action, all you have to do is put whatever HTML you want in the welcome_index.html view and Funky Tabs will handle the javascript necessary to load the HTML into the appropriate tab when the user selects the "Welcome" tab. Funky Tabs will also select the appropriate tab if you need to link from a tab_action in one tab to a tab_action in a separate tab.
+
+== Location Hashes
+
+The goal of Funky Tabs is to provide a complete tabbed, Ajax navigation system that provides a unique url for each action a user takes. This allows users to bookmark pages on your site, and use the forward and back buttons as they would with a non-ajax site, but gives you the speed of a totally ajax-ified system. To do this, Funky Tabs generates a unique location hash for each tab and tab action, and uses javascript to update the location hash of the page as it goes along.
+
+Ben Alman has developed a great jQuery plugin to extend forward and back button functionality to window location hash changes (http://benalman.com/projects/jquery-hashchange-plugin/), which Funky Tabs uses if the plugin has been included in your project. If you do not have this plugin, Funky Tabs defaults to using the window.onhashchange event, which will work in most modern browsers, but fails in IE 6 and 7. The majority of my testing has been with this plugin included, so I recommend it highly.
+
