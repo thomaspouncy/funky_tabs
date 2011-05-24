@@ -77,11 +77,10 @@ if(typeof(jQuery(window).hashchange) == "undefined"){
         // if we can find the hashchange jquery plugin (http://benalman.com/projects/jquery-hashchange-plugin/), then use it
         jQuery(window).hashchange(hashChangeEvent);
 }
-
 jQuery(function() {
-        var initial_tab = <%= FunkyTabs.default_tab_index %>;
+        var initial_hash = "";
         if(window.location.hash != ""){
-                initial_tab = parseInt(window.location.hash.replace("#","").split("-")[0]);
+                initial_hash = window.location.hash.replace("#","");
         }
         var tab = jQuery("#funky_tabs").tabs({
                 show: function(event,ui){
@@ -91,10 +90,13 @@ jQuery(function() {
                 },
                 effect: 'ajax'
         });
-        if(initial_tab == <%= FunkyTabs.default_tab_index %>){
-                selectFunkyTab(initial_tab);
+        if(initial_tab == ""){
+                selectFunkyTab(<%= FunkyTabs.default_tab_index %>);
         } else {
-                jQuery("div#funky_tabs").tabs("select",initial_tab);
+                load_on_select = false;
+                var initial_tab = parseInt(initial_hash.split("-")[0]);
+                jQuery("div#funky_tabs").tabs('select',initial_tab);
+                funkyTabsAjaxCall(initial_hash);
         }
 });
 </script>

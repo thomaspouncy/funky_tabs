@@ -8,7 +8,6 @@ module FunkyTabs
     module InstanceMethods
       def render(*args, &block)
         super(*args, &block) and return if params[:funky_tabs].nil?
-        logger.debug "full path is #{request.fullpath}"
         if FunkyTabs.correct_path_for_location_hash?(request.fullpath,params[:location_hash])
           @location_hash = params[:location_hash]
         else
