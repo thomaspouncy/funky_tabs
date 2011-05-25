@@ -8,11 +8,7 @@ module FunkyTabs
     module InstanceMethods
       def render(*args, &block)
         super(*args, &block) and return if params[:funky_tabs].nil?
-        if FunkyTabs.correct_path_for_location_hash?(request.fullpath,params[:location_hash])
-          @location_hash = params[:location_hash]
-        else
-          @location_hash = FunkyTabs.location_hash_for_content_path(request.fullpath)
-        end
+        @location_hash = params[:location_hash]
         super(*args, &block) and return if @location_hash.nil?
         @tab_index = FunkyTabs.tab_index_from_location_hash(@location_hash)
         super(*args, &block) and return if @tab_index.nil?

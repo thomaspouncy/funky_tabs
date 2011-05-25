@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{funky_tabs}
-  s.version = "0.1.3"
+  s.version = "0.1.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 1.2") if s.respond_to? :required_rubygems_version=
   s.authors = ["Thomas Pouncy"]
-  s.date = %q{2011-05-21}
+  s.date = %q{2011-05-25}
   s.description = %q{Create Ajaxified tabs with simple history through window location hashes for Rails.}
   s.email = %q{thomas.pouncy@gmail.com}
   s.extra_rdoc_files = ["CHANGELOG", "README.rdoc", "lib/funky_tabs.rb", "lib/funky_tabs/helpers.rb", "lib/funky_tabs/rails.rb", "lib/funky_tabs/renderers.rb", "lib/funky_tabs/tab.rb", "lib/funky_tabs/tab_action.rb"]

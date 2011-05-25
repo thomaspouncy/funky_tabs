@@ -80,7 +80,22 @@ Funky Tabs adds a few helper methods to all your controllers and views automatic
   <div onclick="<%= js_to_funky_tab(:products,:edit,"'+current_product+'") %>">Edit this Product</div>
 - The tab_action and tab_action_id parameters are optional. If you call this method without a tab_action, it will call the default tab action.
 
-* location_hash_for_funky_tab(tab,tab_action,tab_action_id) - if, for whatever reason, you just need to know what the unique location hash would be for a particular tab, tab action and object id, this method will tell you.
+* location_hash_for_funky_tab(tab,tab_action,tab_action_id) - This method is useful for directing a tab action to another tab action in a controller. For example, let's say you want to list all a users products if they have any, but direct them to the "add" tab action if they don't have any products yet. You can do this with the following code:
+  def list_products
+    if current_user.products.blank?
+      params[:location_hash] = location_hash_for_funky_tab(:products,:add)
+      add_products
+      return
+    end
+
+    render "list_products"
+  end
+
+  def add_products
+    render "add_products"
+  end
+
+Now if a user tries to go to the "list" tab action, the controller will render the "add" tab action instead. However, since the original get request included the location hash for the "list" tab action, we have to update the location hash parameter so that Funky Tabs will update the window location hash to the "add" tab action value instead of the "list" tab action value.
 
 == Rendering
 
