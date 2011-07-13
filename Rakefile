@@ -2,7 +2,7 @@ require 'rubygems'
 require 'rake'
 require 'echoe'
 
-Echoe.new('funky_tabs', '0.1.51') do |p|
+Echoe.new('funky_tabs', '0.1.6') do |p|
   p.description    = "Create Ajaxified tabs with simple history through window location hashes for Rails."
   p.url            = "http://github.com/thomaspouncy/funky_tabs"
   p.author         = "Thomas Pouncy"
