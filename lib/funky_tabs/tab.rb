@@ -7,6 +7,7 @@ module FunkyTabs
     attr_accessor :title
     attr_accessor :default_tab_action
     attr_accessor :tab_actions
+    attr_accessor :controller_name
 
     #default values for attrs
     def title

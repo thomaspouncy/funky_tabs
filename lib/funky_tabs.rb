@@ -123,6 +123,17 @@ module FunkyTabs
     return location_hash_for_tab_action(tab,tab_action)
   end
 
+  def self.controller_for_tab(tab)
+    return default_tabs_controller if tab.nil?
+    unless tab.is_a?(FunkyTabs::Tab)
+      tab_index = find_tab(tab)
+      return default_tabs_controller if tab_index.nil?
+      tab = tabs[tab_index]
+    end
+    return tab.controller_name unless tab.controller_name.blank?
+    return default_tabs_controller
+  end
+
   def self.content_path_for_tab_and_tab_action(tab,tab_action=nil,tab_action_id=nil)
     unless tab.is_a?(FunkyTabs::Tab)
       tab_index = find_tab(tab)
@@ -140,9 +151,9 @@ module FunkyTabs
       return tab_action.content_path+"?id=#{tab_action_id}"
     end
     if tab_action.name.downcase == "index"
-      content_path = "/#{default_tabs_controller}/#{tab.name.gsub(/\s/,"_").downcase}_index"
+      content_path = "/#{controller_for_tab(tab)}/#{tab.name.gsub(/\s/,"_").downcase}_index"
     else
-      content_path = "/#{default_tabs_controller}/#{tab_action.name.gsub(/\s/,"_").downcase}_#{tab.name.gsub(/\s/,"_").downcase}"
+      content_path = "/#{controller_for_tab(tab)}/#{tab_action.name.gsub(/\s/,"_").downcase}_#{tab.name.gsub(/\s/,"_").downcase}"
     end
     return content_path if tab_action_id.nil?
     return "#{content_path}/#{tab_action_id}"
